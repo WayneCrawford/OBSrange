@@ -105,15 +105,15 @@ def survey_map(lat0, lon0, z0, lats1, lons1, zs1, res, bad):
               edgecolors='k',
               lw=1.0,
               label='Good pings')
-  
-  ax1.scatter(bad['lons'],
-              bad['lats'],
-              s=60,
-              marker='o',
-              c='r',
-              edgecolors='k',
-              lw=1.0,
-              label='Bad pings')
+  if bad is not None:
+      ax1.scatter(bad['lons'],
+                  bad['lats'],
+                  s=60,
+                  marker='o',
+                  c='r',
+                  edgecolors='k',
+                  lw=1.0,
+                  label='Bad pings')
   
   ax1.scatter(lon0,
               lat0,
@@ -158,14 +158,14 @@ def survey_map(lat0, lon0, z0, lats1, lons1, zs1, res, bad):
               c='g',
               edgecolors='k',
               lw=1.0)
-
-  ax2.scatter(bad['lons'],
-              np.zeros(len(bad['lons'])),
-              s=60,
-              marker='o',
-              c='r',
-              edgecolors='k',
-              lw=1.0)
+  if bad is not None:
+      ax2.scatter(bad['lons'],
+                  np.zeros(len(bad['lons'])),
+                  s=60,
+                  marker='o',
+                  c='r',
+                  edgecolors='k',
+                  lw=1.0)
 
   ax2.scatter(lon0,
               z0,

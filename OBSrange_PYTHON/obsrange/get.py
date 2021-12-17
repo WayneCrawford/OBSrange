@@ -5,7 +5,7 @@ A pair of routines to extract SSPs, temperature, salinity, or buoyancy profiles
 along a given point or points along a path (lat, lon). Uses interp_global_SSP(),
 a function to load the variables and interpolate onto the desired location.
 
-Gets the World Ocean Atlas files from directory 'lev_db_dir'.
+Gets the World Ocean Atlas files from directory 'lev_db_path'.
 
 These files are preprocessed to save disk space and have shortened profiles from
 the original data filled in by nearest neighbor data. All profiles extend to
@@ -40,12 +40,19 @@ from scipy.io import loadmat
 from scipy.interpolate import interp2d
 
 # Interpolate global SSPs from Levitus database to get local station SSP.
-def interp_global_SSP(type_str, lat, lon, lev_db_dir):
+def interp_global_SSP(type_str, lat, lon, lev_db_path):
+  """
+  Args:
+    type_str (str): Leviticus database type (monthname, or 'ann')
+    lat (float): latitude
+    lon (float): longitude
+    lev_db_path (`pathlib.Path`): Leviticus database path
+  """
   # Levitus file name. 
-  lev_fname = lev_db_dir + 'lev_' + type_str + '.mat'
+  lev_fname = str(lev_db_path / f'lev_{type_str}.mat')
   
   # Levitus coordinate file.
-  lev_coords = lev_db_dir + 'lev_latlonZ.mat' 
+  lev_coords = str(lev_db_path / 'lev_latlonZ.mat') 
 
   # Load in global sound speed profiles and their coordinates.
   global_ssps = loadmat(lev_fname)['c']
@@ -70,13 +77,13 @@ def interp_global_SSP(type_str, lat, lon, lev_db_dir):
   return local_ssp
 
 # Main function.
-def lev_based_ssp(lat, lon, type_SSP, lev_db_dir, stn_ssp_fname, ssp_dir):
+def lev_based_ssp(lat, lon, type_SSP, lev_db_path, stn_ssp_fname, ssp_dir):
   """
   Args:
     lat (float): latitude
     lon (float): longitude
     type_SSP (int): month number (1-12)
-    lev_db_dir (str): Leviticus database directory
+    lev_db_pat (`pathlib.Path``): Leviticus database path
     stn_ssp_fname (str): Filename to save to
     ssp_dir (str): path to save to
 
@@ -101,7 +108,7 @@ def lev_based_ssp(lat, lon, type_SSP, lev_db_dir, stn_ssp_fname, ssp_dir):
     raise ValueError(str(e) + f', {type_SSP=}')
 
   # Interpolate global SSP file from Levitus database to get local SSP.
-  ssp = interp_global_SSP(type_str, lon, lat, lev_db_dir)
+  ssp = interp_global_SSP(type_str, lon, lat, lev_db_path)
 
   # Check if output folder for generated SSPs exists.
   path = ssp_dir

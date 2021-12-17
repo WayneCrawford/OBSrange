@@ -59,11 +59,13 @@ def instruments(datafile, parameters, ssp_dir):
   data = pings_load(datafile)
   
   # Perform quality control on loaded data.
+  data_bad, N_badpings = None, 0
   if QC:
     print('\n Performing quality control ...')
     data, data_bad = pings_qc(data, vpw0, thresh=res_thresh)
     N_badpings = len(data_bad['twts'])
     print(' Number of pings removed: ' + str(N_badpings))
+    
   
   ##################### Intermediate Variable Declarations #####################
   

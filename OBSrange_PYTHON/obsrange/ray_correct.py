@@ -13,7 +13,10 @@ import pickle
 import numpy as np
 from scipy.stats import hmean
 from scipy.interpolate import interp1d
-from funcs import get, shootrays
+
+from .get import lev_based_ssp as get_lev_based_ssp
+from .shootrays import shootrays
+# from funcs import get, shootrays
 
 from IPython.core.debugger import Tracer
 
@@ -59,7 +62,7 @@ def makegrid(lat, lon, z_sta, stn, t, ssp_dir):
       month = time.gmtime(t).tm_mon 
   
       # Compute approptiate sound-speed-depth profile from Levitus database.
-      ssp, z = get.lev_based_ssp(lat, lon, month + 1, levitus_dir, 'SSP_' + stn + '.txt', ssp_dir)
+      ssp, z = get_lev_based_ssp(lat, lon, month, levitus_dir, 'SSP_' + stn + '.txt', ssp_dir)
     
     else:
       ssp, z = load_ssp(ssp_user_fname)
@@ -100,7 +103,7 @@ def makegrid(lat, lon, z_sta, stn, t, ssp_dir):
     print('\n Ray Tracing... ')
     for i, ray in enumerate(ps):
       # Compute distances and times. (unless rays turn complex)
-      rx, rz, Dr, rt, rv = shootrays.shootrays(ray, v_profile, zmax)
+      rx, rz, Dr, rt, rv = shootrays(ray, v_profile, zmax)
   
       # Situation for when rays go complex.
       if (np.array([rx, rz, Dr, rt, rv]) == 0).all():

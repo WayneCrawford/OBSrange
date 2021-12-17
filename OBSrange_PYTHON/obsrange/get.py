@@ -71,6 +71,16 @@ def interp_global_SSP(type_str, lat, lon, lev_db_dir):
 
 # Main function.
 def lev_based_ssp(lat, lon, type_SSP, lev_db_dir, stn_ssp_fname, ssp_dir):
+  """
+  Args:
+    lat (float): latitude
+    lon (float): longitude
+    type_SSP (int): month number (1-12)
+    lev_db_dir (str): Leviticus database directory
+    stn_ssp_fname (str): Filename to save to
+    ssp_dir (str): path to save to
+
+  """
   # Longitude convention conversion for Levitus database.
   if lon < 0:
     lon = lon + 360
@@ -85,7 +95,10 @@ def lev_based_ssp(lat, lon, type_SSP, lev_db_dir, stn_ssp_fname, ssp_dir):
               'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
   # Current file type.
-  type_str = type_str[type_SSP]
+  try:
+    type_str = type_str[type_SSP]
+  except Exception as e:
+    raise ValueError(str(e) + f', {type_SSP=}')
 
   # Interpolate global SSP file from Levitus database to get local SSP.
   ssp = interp_global_SSP(type_str, lon, lat, lev_db_dir)

@@ -28,7 +28,9 @@ Josh R. & Zach E. & Stephen M. 4/23/18
 '''
 # Import modules and functions
 import numpy as np
-from funcs import coord_txs, calc
+from .coord_txs import latlon2xy
+from .calc import twt as calc_twt
+# from funcs import coord_txs, calc
 
 def format(lines):
   for i, line in enumerate(lines):
@@ -113,10 +115,10 @@ def qc(data, vpw, thresh):
   twts = data['twts']
   
   # Convert geographic coordinates to Cartesian.
-  xs, ys = coord_txs.latlon2xy(lat0, lon0, lats, lons)
+  xs, ys = latlon2xy(lat0, lon0, lats, lons)
  
   # Calculate theoretical two-way travel-times and residuals.
-  theor_twts = calc.twt(x0=0,y0=0,z0=z0,xs=xs,ys=ys,zs=0,vpw=vpw,dvp=0,tat=0)
+  theor_twts = calc_twt(x0=0,y0=0,z0=z0,xs=xs,ys=ys,zs=0,vpw=vpw,dvp=0,tat=0)
   dtwts = twts - theor_twts
 
   # Find which survey points exceed the time threshold (units msecs).

@@ -34,7 +34,9 @@ S. Mosher:
 import numpy as np
 import scipy.linalg as LA
 from scipy.stats import f
-from funcs import coord_txs, calc
+from .coord_txs import xy2latlon
+from .calc import twt as calc_twt
+# from funcs import coord_txs, calc
 
 def dof(res1, v1, res2, v2):
 
@@ -75,13 +77,13 @@ def test(R, coords, lat0, lon0, vpw):
   zg = np.linspace(zM - Dz, zM + Dz, ngridpts)
   assert len(xg) == len(yg) == len(zg)
 
-  lat_grid, lon_grid = coord_txs.xy2latlon(xg, yg, lat0, lon0)
+  lat_grid, lon_grid = xy2latlon(xg, yg, lat0, lon0)
   Nx = len(xg)
   Ny = len(yg)
   Nz = len(zg)
 
   # Bootstrap residuals.
-  twt_pre = calc.twt(xM, yM, zM, xs, ys, zs, vpw, dvpM, tatM)
+  twt_pre = calc_twt(xM, yM, zM, xs, ys, zs, vpw, dvpM, tatM)
   resid_bs = R.twts - twt_pre
   
   # Determine the eigenvectors for z, vpw, and tat.

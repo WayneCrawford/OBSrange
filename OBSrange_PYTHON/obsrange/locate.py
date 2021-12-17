@@ -12,8 +12,24 @@ Josh R. & Zach E. & Stephen M. 4/23/18
 # Import modules and functions
 import numpy as np
 import numpy.linalg as LA
-from funcs import pings, coord_txs, bootstrap, results, calc, ftest, plots, vel
-from funcs import ray_correct
+from .pings import load as pings_load, qc as pings_qc
+from .coord_txs import latlon2xy
+from .bootstrap import (sampling as bootstrap_sampling,
+                        inv as bootstrap_inv,
+                        unscramble as bootstrap_unscramble)
+from .results import results as results_results
+from .calc import GPS_transp_correction
+from .ftest import test as ftest_test
+from .plots import (model_histos as plots_model_histos,
+                    survey_map as plots_survey_map,
+                    misfit as plots_misfit,
+                    residuals as plots_residuals,
+                    ftest as plots_ftest,
+                    resolution_covariance as plots_resolution_covariance)
+from .vel import vector as vel_vector, smooth as vel_smooth
+from .ray_correct import makegrid as ray_correct_makegrid
+# from funcs import pings, coord_txs, bootstrap, results, calc, ftest, plots, vel
+# from funcs import ray_correct
 
 def instruments(datafile, parameters, ssp_dir):
   ################### Independent Parameter Initializations ####################
@@ -40,12 +56,12 @@ def instruments(datafile, parameters, ssp_dir):
   
   # Load data.
   print('\n Loading file ' + datafile.split('/')[-1] +' ...')
-  data = pings.load(datafile)
+  data = pings_load(datafile)
   
   # Perform quality control on loaded data.
   if QC:
     print('\n Performing quality control ...')
-    data, data_bad = pings.qc(data, vpw0, thresh=res_thresh)
+    data, data_bad = pings_qc(data, vpw0, thresh=res_thresh)
     N_badpings = len(data_bad['twts'])
     print(' Number of pings removed: ' + str(N_badpings))
   
@@ -65,8 +81,8 @@ def instruments(datafile, parameters, ssp_dir):
   xs = np.zeros(len(lons))
   ys = np.zeros(len(lats))
   zs = np.zeros(len(lons))
-  xs, ys = coord_txs.latlon2xy(lat0, lon0, lats, lons)
-  x0, y0 = coord_txs.latlon2xy(lat0, lon0, lat0, lon0)
+  xs, ys = latlon2xy(lat0, lon0, lats, lons)
+  x0, y0 = latlon2xy(lat0, lon0, lat0, lon0)
 
   # Package coordinates for passing to other functions.
   drop_coords = [x0, y0, z0, lat0, lon0]
@@ -74,12 +90,12 @@ def instruments(datafile, parameters, ssp_dir):
   coords = [drop_coords, ship_coords]
   
   # Calculate velocity vector of ship at each survey point. Optional smoothing.
-  vs = vel.vector(xs, ys, zs, ts)
-  vs = vel.smooth(vs, npts)
+  vs = vel_vector(xs, ys, zs, ts)
+  vs = vel_smooth(vs, npts)
 
   # Account for GPS-transponder offset
   surv_cog = np.rad2deg(np.arctan2(vs[:,0], vs[:,1]))
-  dx, dy = calc.GPS_transp_correction(dforward, dstarboard, surv_cog)
+  dx, dy = GPS_transp_correction(dforward, dstarboard, surv_cog)
   xs = xs + dx
   ys = ys + dy
 
@@ -87,7 +103,7 @@ def instruments(datafile, parameters, ssp_dir):
   
   # Note "rvl" stands for "ray-versus-line".
   if raycorr:
-    dt_rvl = ray_correct.makegrid(lat0,lon0,z0,sta,ts[0], ssp_dir)
+    dt_rvl = ray_correct_makegrid(lat0,lon0,z0,sta,ts[0], ssp_dir)
   else:
     dt_rvl = []
   
@@ -95,7 +111,7 @@ def instruments(datafile, parameters, ssp_dir):
   
   print('\n Performing bootstrap resampling ...')
   # Randomly resample model data. First columns are unpermutted input data.
-  X, Y, Z, V, TWT, indxs = bootstrap.sampling(xs, ys, zs, vs, twts, N_bs)
+  X, Y, Z, V, TWT, indxs = bootstrap_sampling(xs, ys, zs, vs, twts, N_bs)
 
   ################################## Inversion #################################
   
@@ -106,21 +122,21 @@ def instruments(datafile, parameters, ssp_dir):
   M = len(m0_strt)
   
   # Initialize a results object to hold various results.
-  R = results.results(N_bs, Nobs, M)
+  R = results_results(N_bs, Nobs, M)
 
   # Perform bootstrap inversion.
-  R = bootstrap.inv(X, Y, Z, V, TWT, R, parameters, m0_strt, coords, M, dt_rvl)
+  R = bootstrap_inv(X, Y, Z, V, TWT, R, parameters, m0_strt, coords, M, dt_rvl)
   
   # Unscramble randomly sampled data for plotting and evaluation.
-  R.dtwts = np.mean(bootstrap.unscramble(R.dtwts, indxs), axis=1)
-  R.twts = np.mean(bootstrap.unscramble(R.twts, indxs), axis=1)
-  R.corrs = np.mean(bootstrap.unscramble(R.corrs, indxs), axis=1)
-  R.vrs = np.mean(bootstrap.unscramble(R.vrs, indxs), axis=1)
+  R.dtwts = np.mean(bootstrap_unscramble(R.dtwts, indxs), axis=1)
+  R.twts = np.mean(bootstrap_unscramble(R.twts, indxs), axis=1)
+  R.corrs = np.mean(bootstrap_unscramble(R.corrs, indxs), axis=1)
+  R.vrs = np.mean(bootstrap_unscramble(R.vrs, indxs), axis=1)
 
   ################# F-test for uncertainty using a grid search #################
   
   print('\n Performing F-test ...')
-  xg,yg,zg,Xg,Yg,Zg,P,mx,my,mz,E = ftest.test(R, coords, lat0, lon0, vpw0)
+  xg,yg,zg,Xg,Yg,Zg,P,mx,my,mz,E = ftest_test(R, coords, lat0, lon0, vpw0)
   
   ################################### Plots ####################################
   
@@ -128,22 +144,22 @@ def instruments(datafile, parameters, ssp_dir):
   
   # Histograms of model parameters.
   Nbins = 15
-  fig1 = plots.model_histos(R, Nbins)
+  fig1 = plots_model_histos(R, Nbins)
   
   # Survey map.
-  fig2 = plots.survey_map(lat0, lon0, z0, lats, lons, zs, R, data_bad)
+  fig2 = plots_survey_map(lat0, lon0, z0, lats, lons, zs, R, data_bad)
   
   # Model misfit histogram.
-  fig3 = plots.misfit(R.E_rms, Nbins)
+  fig3 = plots_misfit(R.E_rms, Nbins)
   
   # Model residuals at each site.
-  fig4 = plots.residuals(lats, lons, xs, ys, vs, R, Nobs)
+  fig4 = plots_residuals(lats, lons, xs, ys, vs, R, Nobs)
   
   # F-test plots.
-  fig5 = plots.ftest(xg, yg, zg, Xg, Yg, Zg, P, mx, my, mz, R)
+  fig5 = plots_ftest(xg, yg, zg, Xg, Yg, Zg, P, mx, my, mz, R)
   
   # Resolution and covariance.
-  fig6 = plots.resolution_covariance(R, M)
+  fig6 = plots_resolution_covariance(R, M)
   
   figs = [fig1, fig2, fig3, fig4, fig5, fig6]
   

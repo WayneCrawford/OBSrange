@@ -22,7 +22,10 @@ Josh R. & Zach E. & Stephen M. 4/23/18
 #Import modules and functions
 import numpy as np
 import numpy.linalg as LA
-from funcs import results, calc, coord_txs
+
+from .calc import tt_corr as calc_tt_corr, G as calc_G, twt as calc_twt
+from .coord_txs import xy2latlon
+# from funcs import results, calc, coord_txs
 
 def get_bs_indxs(data, N):
   # Create an array of indices for the number of data points.
@@ -143,7 +146,7 @@ def inv(X, Y, Z, V, T, R, parameters, m0_strt, coords, M, dt_rvl):
       dvp = m0[3]
 
       # Apply correction to two-way travel-times due to ship velocity.
-      ctd, cns, vr = calc.tt_corr(x, y, z, xbs, ybs, zbs, vbs, vpw0, dvp, twtbs)
+      ctd, cns, vr = calc_tt_corr(x, y, z, xbs, ybs, zbs, vbs, vpw0, dvp, twtbs)
       if twtcorr:
         twts = ctd # ctd = corrected, cns = corrections
       else:
@@ -156,14 +159,14 @@ def inv(X, Y, Z, V, T, R, parameters, m0_strt, coords, M, dt_rvl):
         twts = twts - dT_ray_v_line
 
       # Build the G matrix.
-      G = calc.G(x, y, z, dvp, xbs, ybs, zbs, vpw0, Nobs, M)
+      G = calc_G(x, y, z, dvp, xbs, ybs, zbs, vpw0, Nobs, M)
       
       # Set up norm damping for each parameter.
       H = np.eye(M) * np.diag([dampx, dampy, dampz, dampdvp])
       h = np.zeros(M)
       
       # Calculate predicted travel-times for this iteration and residuals.
-      twt_pre = calc.twt(x, y, z, xbs, ybs, zbs, vpw0, dvp, tat)
+      twt_pre = calc_twt(x, y, z, xbs, ybs, zbs, vpw0, dvp, tat)
       dtwt = twts - twt_pre
 
       # Calculate RMS error.
@@ -204,7 +207,7 @@ def inv(X, Y, Z, V, T, R, parameters, m0_strt, coords, M, dt_rvl):
              dat_res, mod_res, mod_cov, tat)
     
     # Convert stabilized result coords of current iteration back to lat lon.
-    R.lats[i], R.lons[i] = coord_txs.xy2latlon(R.xs[i], R.ys[i], lat0, lon0)
+    R.lats[i], R.lons[i] = xy2latlon(R.xs[i], R.ys[i], lat0, lon0)
 
   # Return filled results.
   return R

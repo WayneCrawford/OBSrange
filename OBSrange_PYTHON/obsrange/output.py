@@ -11,7 +11,8 @@ Stephen M. 4/23/18
 # Import modules and functions
 import os
 import pickle
-from funcs import txt
+from .txt import build as txt_build
+# from funcs import txt
 
 def out(results, figs, pkls, plts, txts, parameters):
   # Print statement.
@@ -26,7 +27,7 @@ def out(results, figs, pkls, plts, txts, parameters):
   # Create and write a .txt file containing the final results.
   txt_path = txts + results['sta'] + '_location.txt'
   txt_fle = open(txt_path, 'w')
-  txt.build(txt_fle, results, parameters)
+  txt_build(txt_fle, results, parameters)
 
   # Save figures in the output directory.
   for i, fig in enumerate(figs):

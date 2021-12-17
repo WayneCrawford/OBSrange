@@ -14,7 +14,7 @@ Stephen M. & Zach E. & Josh R. 4/23/18
 import os
 import pickle
 import numpy as np
-from funcs import fetch, locate, output
+from obsrange import fetch, locate, output
 
 ############################# Inversion Parameters #############################
 

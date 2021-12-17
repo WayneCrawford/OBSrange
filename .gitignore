@@ -4,7 +4,6 @@
 *.gz
 *.aux
 *.txt
-*.mat
 *.pkl
 *.DS_Store
 *.m~
